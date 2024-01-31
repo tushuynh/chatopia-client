@@ -4,47 +4,65 @@ import styled from 'styled-components';
 import { getAllMessagesRoute, sendMessageRoute } from '../utils/APIRoutes';
 import ChatInput from './ChatInput';
 import Logout from './Logout';
-import { v4 as uuidv4 } from 'uuid'
+import { v4 as uuidv4 } from 'uuid';
+import { toast } from 'react-toastify';
 
 export default function ChatContainer({ currentChat, currentUser, socket }) {
   const [messages, setMessages] = useState([]);
   const [arrivalMessage, setArrivalMessage] = useState(null);
-  const scrollRef = useRef()
+  const scrollRef = useRef();
+
+  const toastOptions = {
+    position: 'bottom-right',
+    autoClose: 8000,
+    pauseOnHover: true,
+    draggable: true,
+    theme: 'dark',
+  };
 
   useEffect(() => {
     (async () => {
       if (currentChat && currentUser) {
-        const { data } = await axios.post(getAllMessagesRoute, {
-          from: currentUser._id,
-          to: currentChat._id,
+        const { data } = await axios.get(getAllMessagesRoute, {
+          params: {
+            from: currentUser._id,
+            to: currentChat._id,
+          },
         });
 
-        setMessages(data);
+        setMessages(data.data);
       }
     })();
   }, [currentChat, currentUser]);
 
   const handleSendMsg = async (msg) => {
-    await axios.post(sendMessageRoute, {
-      from: currentUser._id,
-      to: currentChat._id,
-      message: msg,
-    });
+    try {
+      await axios.post(sendMessageRoute, {
+        from: currentUser._id,
+        to: currentChat._id,
+        message: msg,
+      });
 
-    socket.current.emit('send-msg', {
-      from: currentUser._id,
-      to: currentChat._id,
-      message: msg,
-    });
+      socket.current.emit('send-message', {
+        from: currentUser._id,
+        to: currentChat._id,
+        message: msg,
+      });
 
-    const msgs = [...messages];
-    msgs.push({ fromSelf: true, message: msg });
-    setMessages(msgs);
+      const msgs = [...messages];
+      msgs.push({ fromSelf: true, message: msg });
+      setMessages(msgs);
+    } catch (error) {
+      const { response } = error;
+      if (!response?.data?.success) {
+        toast.error(response.data?.message, toastOptions);
+      }
+    }
   };
 
   useEffect(() => {
     if (socket.current) {
-      socket.current.on('msg-receive', (msg) => {
+      socket.current.on('message-receive', (msg) => {
         setArrivalMessage({ fromSelf: false, message: msg });
       });
     }
@@ -55,8 +73,8 @@ export default function ChatContainer({ currentChat, currentUser, socket }) {
   }, [arrivalMessage]);
 
   useEffect(() => {
-    scrollRef.current?.scrollIntoView({ behaviour: 'smooth'})
-  }, [messages])
+    scrollRef.current?.scrollIntoView({ behaviour: 'smooth' });
+  }, [messages]);
 
   return (
     <>
@@ -74,12 +92,18 @@ export default function ChatContainer({ currentChat, currentUser, socket }) {
                 <h3>{currentChat.displayName}</h3>
               </div>
             </div>
-            <Logout userId={currentUser._id} socket={socket} />
+            <Logout
+              userId={currentUser._id}
+              socket={socket}
+            />
           </div>
           <div className="chat-messages">
             {messages.map((message) => {
               return (
-                <div ref={scrollRef} key={uuidv4()} >
+                <div
+                  ref={scrollRef}
+                  key={uuidv4()}
+                >
                   <div
                     className={`message ${
                       message.fromSelf ? 'sended' : 'received'

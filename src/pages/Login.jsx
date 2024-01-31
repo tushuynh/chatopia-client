@@ -40,8 +40,8 @@ export default function Login() {
           password,
         });
 
-        if (data.status === true) {
-          localStorage.setItem('chat-app-user', JSON.stringify(data.user));
+        if (data.success === true) {
+          localStorage.setItem('chat-app-user', JSON.stringify(data.data.user));
           navigate('/');
         } else {
           toast.error('Something went wrong!', toastOptions);
@@ -49,8 +49,8 @@ export default function Login() {
       }
     } catch (error) {
       const { response } = error;
-      if (response.data?.status === false) {
-        toast.error(response.data?.msg, toastOptions);
+      if (!response?.data?.success) {
+        toast.error(response.data?.message, toastOptions);
       }
     }
   };

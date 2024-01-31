@@ -35,21 +35,29 @@ export default function Register() {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    if (handleValidation()) {
-      const { password, username, email } = userInfo;
-      const { data } = await axios.post(registerRoute, {
-        username,
-        email,
-        password,
-      });
-
-      if (data.status === false) {
-        toast.error(data.msg, toastOptions);
-      } else if (data.status === true) {
-        localStorage.setItem('chat-app-user', JSON.stringify(data.user));
+    try {
+      if (handleValidation()) {
+        const { password, username, email } = userInfo;
+        const { data } = await axios.post(registerRoute, {
+          username,
+          email,
+          password,
+        });
+  
+        if (!data.success) {
+          toast.error(data.message, toastOptions);
+        }
+  
+        localStorage.setItem('chat-app-user', JSON.stringify(data.data.user));
         navigate('/');
       }
+    } catch (error) {
+      const { response } = error;
+      if (!response?.data?.success) {
+        toast.error(response.data?.message, toastOptions);
+      }
     }
+    
   };
 
   const handleValidation = () => {

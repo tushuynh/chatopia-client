@@ -36,23 +36,29 @@ export default function Contacts({ contacts, currentUser, changeChat }) {
   };
 
   const setDisplayName = async (e) => {
-    const displayName = e.target.value;
-
-    if (!displayName) {
-      toast.error(`User's name must not be empty`, toastOptions);
-      setIsEditDisplayName(false);
-      return;
-    }
-
-    const { data } = await axios.put(
-      `${userRoute}/${currentUser._id}/setDisplayName`,
-      {
-        displayName,
+    try {
+      const displayName = e.target.value;
+      if (!displayName) {
+        toast.error(`User's name must not be empty`, toastOptions);
+        setIsEditDisplayName(false);
+        return;
       }
-    );
 
-    setCurrentUsername(data.displayName);
-    setIsEditDisplayName(false);
+      const { data } = await axios.put(
+        `${userRoute}/${currentUser._id}/setDisplayName`,
+        {
+          displayName,
+        }
+      );
+
+      setCurrentUsername(data.data.displayName);
+      setIsEditDisplayName(false);
+    } catch (error) {
+      const { response } = error;
+      if (!response?.data?.success) {
+        toast.error(response.data?.message, toastOptions);
+      }
+    }
   };
 
   return (
@@ -60,7 +66,10 @@ export default function Contacts({ contacts, currentUser, changeChat }) {
       {currentUserImage && currentUsername && (
         <Container>
           <div className="brand">
-            <img src={Logo} alt="logo" />
+            <img
+              src={Logo}
+              alt="logo"
+            />
             <h3>Chatopia</h3>
           </div>
           <div className="contacts">
@@ -203,7 +212,7 @@ const Container = styled.div`
         border-radius: 0.4rem;
         padding: 0.5rem;
         font-size: 1.5rem;
-        width: 90%
+        width: 90%;
       }
     }
     @media screen and (min-width: 720px) and (max-width: 1080px) {

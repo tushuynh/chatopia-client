@@ -7,6 +7,7 @@ import Contacts from '../components/Contacts';
 import Welcome from '../components/Welcome';
 import ChatContainer from '../components/ChatContainer';
 import { io } from 'socket.io-client';
+import { toast } from 'react-toastify';
 
 export default function Chat() {
   const socket = useRef();
@@ -15,6 +16,14 @@ export default function Chat() {
   const [currentUser, setCurrentUser] = useState(undefined);
   const [currentChat, setCurrentChat] = useState(undefined);
   const [isLoaded, setIsLoaded] = useState(false);
+
+  const toastOptions = {
+    position: 'bottom-right',
+    autoClose: 8000,
+    pauseOnHover: true,
+    draggable: true,
+    theme: 'dark',
+  };
 
   useEffect(() => {
     (async () => {
@@ -36,16 +45,24 @@ export default function Chat() {
 
   useEffect(() => {
     (async () => {
-      if (currentUser) {
-        if (currentUser.isAvatarImageSet) {
-          const { data } = await axios.get(
-            `${userRoute}/${currentUser._id}/friends`
-          );
-          setContacts(data);
-        } else {
-          navigate('/setAvatar');
+      try {
+        if (currentUser) {
+          if (currentUser.isAvatarImageSet) {
+            const { data } = await axios.get(
+              `${userRoute}/${currentUser._id}/friends`
+            );
+            setContacts(data.data);
+          } else {
+            navigate('/setAvatar');
+          }
+        }
+      } catch (error) {
+        const { response } = error;
+        if (!response?.data?.success) {
+          toast.error(response.data?.message, toastOptions);
         }
       }
+      
     })();
   }, [currentUser, navigate]);
 
