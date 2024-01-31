@@ -17,14 +17,6 @@ export default function Chat() {
   const [currentChat, setCurrentChat] = useState(undefined);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  const toastOptions = {
-    position: 'bottom-right',
-    autoClose: 8000,
-    pauseOnHover: true,
-    draggable: true,
-    theme: 'dark',
-  };
-
   useEffect(() => {
     (async () => {
       if (!localStorage.getItem('chat-app-user')) {
@@ -45,6 +37,13 @@ export default function Chat() {
 
   useEffect(() => {
     (async () => {
+      const toastOptions = {
+        position: 'bottom-right',
+        autoClose: 8000,
+        pauseOnHover: true,
+        draggable: true,
+        theme: 'dark',
+      };
       try {
         if (currentUser) {
           if (currentUser.isAvatarImageSet) {
@@ -62,7 +61,6 @@ export default function Chat() {
           toast.error(response.data?.message, toastOptions);
         }
       }
-      
     })();
   }, [currentUser, navigate]);
 
